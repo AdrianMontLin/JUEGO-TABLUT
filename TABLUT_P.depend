@@ -1,0 +1,52 @@
+# depslib dependency file v1.0
+1715571178 source:c:\users\usuario\desktop\tablut_p\main.cpp
+	<iostream>
+	<fstream>
+	<cstdlib>
+	<ctime>
+	<locale>
+	<string>
+	"tablut.h"
+
+1715571065 c:\users\usuario\desktop\tablut_p\tablut.h
+	<iostream>
+	<fstream>
+	<cstdlib>
+	<ctime>
+	<string>
+
+1715571178 source:c:\users\usuario\desktop\tablut_p\tablut.cpp
+	<iostream>
+	<fstream>
+	<cstdlib>
+	<ctime>
+	<string>
+	"tablut.h"
+	<locale>
+
+1715622493 source:c:\users\usuario\desktop\proyectos-progra\tablut_p\main.cpp
+	<iostream>
+	<fstream>
+	<cstdlib>
+	<ctime>
+	<locale>
+	<string>
+	"tablut.h"
+
+1715622493 c:\users\usuario\desktop\proyectos-progra\tablut_p\tablut.h
+	<iostream>
+	<fstream>
+	<cstdlib>
+	<ctime>
+	<locale>
+	<string>
+
+1715622493 source:c:\users\usuario\desktop\proyectos-progra\tablut_p\tablut.cpp
+	<iostream>
+	<fstream>
+	<cstdlib>
+	<ctime>
+	<locale>
+	<string>
+	"tablut.h"
+
