@@ -120,17 +120,33 @@ bool cargar_p(char tablero[filas][columnas]) {
     return false;
   }
 }
+///*-------FUNCIÓN FICHAS ALREDEDOR---------*///
+bool suficientesFichasAlrededor(char tablero[filas][columnas], int fila, int columna, char ficha) {
+  int fichasAlrededor = 0;
+
+  if (fila > 0 && tablero[fila - 1][columna] == ficha) {
+    fichasAlrededor++;
+  }
+  if (fila < filas - 1 && tablero[fila + 1][columna] == ficha) {
+    fichasAlrededor++;
+  }
+  if (columna > 0 && tablero[fila][columna - 1] == ficha) {
+    fichasAlrededor++;
+  }
+  if (columna < columnas - 1 && tablero[fila][columna + 1] == ficha) {
+    fichasAlrededor++;
+  }
+
+  return fichasAlrededor >= 4;
+}
+
 ///*-------FUNCIÓN MOVIMIENTO VÁLIDO---------*///
-bool esMovimientoValido(char tablero[filas][columnas], int filaOrigen,
-                        int columnaOrigen, int filaDestino, int columnaDestino,
-                        char jugadorActual) {
+bool esMovimientoValido(char tablero[filas][columnas], int filaOrigen, int columnaOrigen, int filaDestino, int columnaDestino, char jugadorActual) {
   if (!posicionValida(filaDestino, columnaDestino)) {
     return false;
   }
 
-  if (posicionOcupada(tablero, filaDestino, columnaDestino) &&
-      !posicionOcupadaPorJugador(tablero, filaDestino, columnaDestino,
-                                 jugadorActual)) {
+  if (posicionOcupada(tablero, filaDestino, columnaDestino) && !posicionOcupadaPorJugador(tablero, filaDestino, columnaDestino, jugadorActual)) {
     return false;
   }
 
@@ -140,10 +156,8 @@ bool esMovimientoValido(char tablero[filas][columnas], int filaOrigen,
 
   // Verificar si el movimiento es horizontal
   if (filaOrigen == filaDestino) {
-    int pasoColumna =
-        (columnaDestino - columnaOrigen) / abs(columnaDestino - columnaOrigen);
-    for (int j = columnaOrigen + pasoColumna; j != columnaDestino;
-         j += pasoColumna) {
+    int pasoColumna = (columnaDestino - columnaOrigen) / abs(columnaDestino - columnaOrigen);
+    for (int j = columnaOrigen + pasoColumna; j != columnaDestino; j += pasoColumna) {
       if (posicionOcupada(tablero, filaOrigen, j)) {
         return false; // Casilla ocupada en el camino
       }
@@ -160,8 +174,17 @@ bool esMovimientoValido(char tablero[filas][columnas], int filaOrigen,
     }
   }
 
+  // Verificar si el jugador actual es el jugador 1
+  if (jugadorActual == Blanco) {
+    // Verificar si se intenta comer al rey sin que esté rodeado por al menos 4 fichas N
+    if (tablero[filaDestino][columnaDestino] == Rey && !suficientesFichasAlrededor(tablero, filaDestino, columnaDestino, Negro)) {
+      return false;
+    }
+  }
+
   return true;
 }
+
 ///*-------FUNCIÓN MOVER PIEZA---------*///
 void moverPieza(char tablero[filas][columnas], int filaOrigen,
                 int columnaOrigen, int filaDestino, int columnaDestino) {
@@ -196,37 +219,105 @@ EstadoJuego verificarEstadoJuego(char tablero[filas][columnas]) {
 
   return EnPartida;
 }
+// funcion para capturar al rey 
+bool capturarRey(char tablero[filas][columnas], int filaDestino, int columnaDestino) {
+    char jugador = tablero[filaDestino][columnaDestino];
+
+    // Verificar si el jugador es el Rey
+    if (jugador != Rey) {
+        return false; // No es el Rey, no se puede capturar
+    }
+
+    // Contadores para fichas negras en las cuatro direcciones (arriba, abajo, izquierda, derecha)
+    int countArriba = 0, countAbajo = 0, countIzquierda = 0, countDerecha = 0;
+
+    // Verificar hacia arriba
+    for (int i = filaDestino - 1; i >= 0; --i) {
+        if (tablero[i][columnaDestino] == Negro) {
+            ++countArriba;
+        } else {
+            break;
+        }
+    }
+
+    // Verificar hacia abajo
+    for (int i = filaDestino + 1; i < filas; ++i) {
+        if (tablero[i][columnaDestino] == Negro) {
+            ++countAbajo;
+        } else {
+            break;
+        }
+    }
+
+    // Verificar hacia la izquierda
+    for (int j = columnaDestino - 1; j >= 0; --j) {
+        if (tablero[filaDestino][j] == Negro) {
+            ++countIzquierda;
+        } else {
+            break;
+        }
+    }
+
+    // Verificar hacia la derecha
+    for (int j = columnaDestino + 1; j < columnas; ++j) {
+        if (tablero[filaDestino][j] == Negro) {
+            ++countDerecha;
+        } else {
+            break;
+        }
+    }
+
+    // Verificar si el Rey está rodeado por 4 fichas negras en cualquier dirección
+    if (countArriba >= 4 || countAbajo >= 4 || countIzquierda >= 4 || countDerecha >= 4) {
+        return true; // El Rey está rodeado, se puede capturar
+    }
+
+    return false; // El Rey no está rodeado, no se puede capturar
+}
+
+
+
+
+
+
 ///*-------FUNCIÓN VERIFICACIÓN DE CAPTURAS---------*///
 void verificarCapturas(char tablero[filas][columnas], int filaDestino,
-                       int columnaDestino, char jugadorActual) {
-  // Verificar capturas verticales
-  if (filaDestino > 1 && filaDestino < filas - 2) {
-    if (tablero[filaDestino - 1][columnaDestino] != jugadorActual &&
-        tablero[filaDestino - 1][columnaDestino] != Nada &&
-        tablero[filaDestino - 2][columnaDestino] == jugadorActual) {
-      tablero[filaDestino - 1][columnaDestino] = Nada;
+                       int columnaDestino, char jugador) {
+    // Verificar capturas verticales
+    if (filaDestino > 1 && filaDestino < filas - 2) {
+        if (tablero[filaDestino - 1][columnaDestino] != jugador &&
+            tablero[filaDestino - 1][columnaDestino] != Nada &&
+            tablero[filaDestino - 2][columnaDestino] == jugador &&
+            tablero[filaDestino - 1][columnaDestino] != Rey) {
+            tablero[filaDestino - 1][columnaDestino] = Nada;
+        }
+        if (tablero[filaDestino + 1][columnaDestino] != jugador &&
+            tablero[filaDestino + 1][columnaDestino] != Nada &&
+            tablero[filaDestino + 2][columnaDestino] == jugador &&
+            tablero[filaDestino + 1][columnaDestino] != Rey) {
+            tablero[filaDestino + 1][columnaDestino] = Nada;
+        }
     }
-    if (tablero[filaDestino + 1][columnaDestino] != jugadorActual &&
-        tablero[filaDestino + 1][columnaDestino] != Nada &&
-        tablero[filaDestino + 2][columnaDestino] == jugadorActual) {
-      tablero[filaDestino + 1][columnaDestino] = Nada;
-    }
-  }
 
-  // Verificar capturas horizontales
-  if (columnaDestino > 1 && columnaDestino < columnas - 2) {
-    if (tablero[filaDestino][columnaDestino - 1] != jugadorActual &&
-        tablero[filaDestino][columnaDestino - 1] != Nada &&
-        tablero[filaDestino][columnaDestino - 2] == jugadorActual) {
-      tablero[filaDestino][columnaDestino - 1] = Nada;
+    // Verificar capturas horizontales
+    if (columnaDestino > 1 && columnaDestino < columnas - 2) {
+        if (tablero[filaDestino][columnaDestino - 1] != jugador &&
+            tablero[filaDestino][columnaDestino - 1] != Nada &&
+            tablero[filaDestino][columnaDestino - 2] == jugador &&
+            tablero[filaDestino][columnaDestino - 1] != Rey) {
+            tablero[filaDestino][columnaDestino - 1] = Nada;
+        }
+        if (tablero[filaDestino][columnaDestino + 1] != jugador &&
+            tablero[filaDestino][columnaDestino + 1] != Nada &&
+            tablero[filaDestino][columnaDestino + 2] == jugador &&
+            tablero[filaDestino][columnaDestino + 1] != Rey) {
+            tablero[filaDestino][columnaDestino + 1] = Nada;
+        }
     }
-    if (tablero[filaDestino][columnaDestino + 1] != jugadorActual &&
-        tablero[filaDestino][columnaDestino + 1] != Nada &&
-        tablero[filaDestino][columnaDestino + 2] == jugadorActual) {
-      tablero[filaDestino][columnaDestino + 1] = Nada;
-    }
-  }
-}
+       
+      }
+
+
 ///*-------FUNCIÓN TURNO JUGADOR---------*///
 void turnoJugador(char tablero[filas][columnas], Jugadores t_jugador1,
                   Jugadores t_jugador2, char jugadorActual) {
